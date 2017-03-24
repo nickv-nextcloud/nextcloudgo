@@ -1,4 +1,4 @@
-// Package nextcloudgo.share contains utility functions for working with shares.
+// Package sharing contains utility functions for working with shares.
 package sharing
 
 import (
@@ -69,10 +69,9 @@ func New(sdk nextcloudgo.NextcloudGo) Sharing {
 }
 
 func (sharing *Sharing) GetShareById(id int) (Share, error) {
-	url := sharing.sdk.GetServerUrl()
-	url += endpoint + "/shares/" + strconv.Itoa(id)
+	url := endpoint + "/shares/" + strconv.Itoa(id)
 
-	content, err := sharing.ocs.NewRequest(http.MethodGet, url+"?format=json")
+	content, err := sharing.ocs.NewRequest(http.MethodGet, url+"?format=json", true)
 	if err != nil {
 		return Share{}, err
 	}

@@ -1,7 +1,10 @@
 package nextcloudgo
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
+	"errors"
 
 	//"fmt"
 	"io/ioutil"
@@ -11,8 +14,13 @@ import (
 
 type NextcloudGo struct {
 	serverUrl string
+	certPath  string
 	user      string
 	password  string
+}
+
+func (sdk *NextcloudGo) SetCustomCertPath(certPath string) {
+	sdk.certPath = certPath
 }
 
 func (sdk *NextcloudGo) Connect(serverUrl string) bool {
@@ -64,13 +72,7 @@ func (sdk *NextcloudGo) Capabilities() interface{} {
 		return capabilities
 	}
 
-	client := &http.Client{}
-
-	/* Authenticate */
-	req, err := http.NewRequest(http.MethodGet, sdk.serverUrl+"ocs/v1.php/cloud/capabilities?format=json", nil)
-	req.SetBasicAuth(sdk.user, sdk.password)
-
-	response, err := client.Do(req)
+	response, err := sdk.Request(http.MethodGet, "ocs/v1.php/cloud/capabilities?format=json", true)
 	if err != nil {
 		log.Fatal(err)
 		return capabilities
@@ -93,8 +95,7 @@ func (sdk *NextcloudGo) Status() map[string]string {
 		return status
 	}
 
-	client := &http.Client{}
-	response, err := client.Get(sdk.serverUrl + "status.php")
+	response, err := sdk.Request(http.MethodGet, "status.php", false)
 	if err != nil {
 		log.Fatal(err)
 		return status
@@ -111,14 +112,37 @@ func (sdk *NextcloudGo) Status() map[string]string {
 	}
 }
 
-func (sdk *NextcloudGo) GetServerUrl() string {
-	return sdk.serverUrl
-}
+func (sdk *NextcloudGo) Request(method, url string, auth bool) (*http.Response, error) {
+	req, err := http.NewRequest(method, sdk.serverUrl+url, nil)
+	if err != nil {
+		return nil, err
+	}
 
-func (sdk *NextcloudGo) GetAuthUser() string {
-	return sdk.user
-}
+	if auth {
+		if !sdk.IsLoggedIn() {
+			return nil, errors.New("No user logged in")
+		}
+		req.SetBasicAuth(sdk.user, sdk.password)
+	}
+	req.Header.Add("OCS-APIRequest", "true")
 
-func (sdk *NextcloudGo) GetAuthPassword() string {
-	return sdk.password
+	client := &http.Client{}
+	if sdk.certPath != "" {
+		tlsConfig := &tls.Config{}
+		certs := x509.NewCertPool()
+
+		pemData, err := ioutil.ReadFile(sdk.certPath)
+		if err != nil {
+			// do error
+		}
+		certs.AppendCertsFromPEM(pemData)
+		tlsConfig.RootCAs = certs
+
+		tr := &http.Transport{
+			TLSClientConfig: tlsConfig,
+		}
+		client = &http.Client{Transport: tr}
+	}
+
+	return client.Do(req)
 }

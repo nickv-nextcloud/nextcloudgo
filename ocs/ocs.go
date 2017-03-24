@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/nextcloud/nextcloudgo"
 )
@@ -17,17 +16,8 @@ func New(sdk nextcloudgo.NextcloudGo) Request {
 	return Request{sdk: sdk}
 }
 
-func (ocs *Request) NewRequest(method, url string) (map[string]interface{}, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("OCS-APIRequest", "true")
-	req.SetBasicAuth(ocs.sdk.GetAuthUser(), ocs.sdk.GetAuthPassword())
-
-	response, err := client.Do(req)
+func (ocs *Request) NewRequest(method, url string, auth bool) (map[string]interface{}, error) {
+	response, err := ocs.sdk.Request(method, url, auth)
 	if err != nil {
 		return nil, err
 	}
