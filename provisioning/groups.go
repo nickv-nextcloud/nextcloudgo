@@ -60,7 +60,7 @@ func (api *Provisioning) DeleteGroup(groupid string) error {
 		if ocs.ValidateStatusCode(content, 101) {
 			return ErrGroupDoesNotExist
 		}
-		return errors.New("An error occured while creating the group")
+		return errors.New("An error occured while deleting the group")
 	}
 
 	return nil
