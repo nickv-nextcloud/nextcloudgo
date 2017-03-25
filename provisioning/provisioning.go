@@ -16,7 +16,7 @@ type Provisioning struct {
 	ocs ocs.Request
 }
 
-// New returns a new Provisioning instance given the sdk
+// New returns a new Provisioning instance when given the sdk
 func New(sdk nextcloudgo.NextcloudGo) Provisioning {
 	ocs := ocs.New(sdk)
 	return Provisioning{sdk: sdk, ocs: ocs}

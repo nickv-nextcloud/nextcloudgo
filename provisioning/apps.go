@@ -21,7 +21,7 @@ func (api *Provisioning) GetApps(filter string) ([]string, error) {
 		url = endpoint + "/apps?format=json"
 	}
 
-	content, err := api.ocs.NewRequest(http.MethodGet, url, true)
+	content, err := api.ocs.Request(http.MethodGet, url, true)
 	if err != nil {
 		return []string{}, err
 	}
@@ -81,7 +81,7 @@ func (api *Provisioning) DisableApp(appid string) error {
 func (api *Provisioning) changeAppState(appid, method string) error {
 	url := endpoint + "/apps/" + appid + "?format=json"
 
-	content, err := api.ocs.NewRequest(method, url, true)
+	content, err := api.ocs.Request(method, url, true)
 	if err != nil {
 		return err
 	}

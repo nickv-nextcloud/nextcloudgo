@@ -8,15 +8,18 @@ import (
 	"github.com/nextcloud/nextcloudgo"
 )
 
+// Request is a wrapper around net.http.Request which also takes care of authentication
 type Request struct {
 	sdk nextcloudgo.NextcloudGo
 }
 
+// New returns a new OCS request handler when given the sdk
 func New(sdk nextcloudgo.NextcloudGo) Request {
 	return Request{sdk: sdk}
 }
 
-func (ocs *Request) NewRequest(method, url string, auth bool) (map[string]interface{}, error) {
+// Request performs a (authenticated) request and returns the data
+func (ocs *Request) Request(method, url string, auth bool) (map[string]interface{}, error) {
 	response, err := ocs.sdk.Request(method, url, auth)
 	if err != nil {
 		return nil, err
