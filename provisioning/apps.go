@@ -7,27 +7,57 @@ import (
 	"github.com/nextcloud/nextcloudgo/ocs"
 )
 
-func (api *Provisioning) IsAppEnabled(appid string) (bool, error) {
-	return api.isAppInArray(appid, endpoint+"/apps?filter=enabled&format=json")
-}
+// GetApps returns the list of apps matching the given filter
+// Valid values for filter are: enabled, disabled, all
+func (api *Provisioning) GetApps(filter string) ([]string, error) {
+	if filter != "enabled" && filter != "disabled" && filter != "all" {
+		return []string{}, errors.New("Invalid filter given")
+	}
 
-func (api *Provisioning) IsAppAvailable(appid string) (bool, error) {
-	return api.isAppInArray(appid, endpoint+"/apps?format=json")
-}
+	var url string
+	if filter == "enabled" || filter == "disabled" {
+		url = endpoint + "/apps?filter=" + filter + "&format=json"
+	} else {
+		url = endpoint + "/apps?format=json"
+	}
 
-func (api *Provisioning) isAppInArray(appid, url string) (bool, error) {
 	content, err := api.ocs.NewRequest(http.MethodGet, url, true)
 	if err != nil {
-		return false, err
+		return []string{}, err
 	}
 
 	if !ocs.ValidateStatusCode(content, 200) {
-		return false, errors.New("Status code was invalid")
+		return []string{}, errors.New("Status code was invalid")
 	}
 
-	ocs := content["ocs"].(map[string]interface{})
-	data := ocs["data"].(map[string]interface{})
-	apps := data["apps"].([]interface{})
+	apps, err := ocs.GetStringList(content, []string{"ocs", "data", "apps"})
+	if err != nil {
+		return []string{}, err
+	}
+
+	return apps, nil
+}
+
+// IsAppEnabled returns true when the app is enabled, false otherwise
+func (api *Provisioning) IsAppEnabled(appid string) (bool, error) {
+	return api.isAppInArray(appid, "enabled")
+}
+
+// IsAppDisabled returns true when the app is disabled but available, false otherwise
+func (api *Provisioning) IsAppDisabled(appid string) (bool, error) {
+	return api.isAppInArray(appid, "disabled")
+}
+
+// IsAppAvailable returns true when the app is available, false otherwise
+func (api *Provisioning) IsAppAvailable(appid string) (bool, error) {
+	return api.isAppInArray(appid, "all")
+}
+
+func (api *Provisioning) isAppInArray(appid, filter string) (bool, error) {
+	apps, err := api.GetApps(filter)
+	if err != nil {
+		return false, err
+	}
 
 	for _, app := range apps {
 		if app == appid {
@@ -38,10 +68,12 @@ func (api *Provisioning) isAppInArray(appid, url string) (bool, error) {
 	return false, nil
 }
 
+// EnableApp enables an app when it is available
 func (api *Provisioning) EnableApp(appid string) error {
 	return api.changeAppState(appid, http.MethodPost)
 }
 
+// DisableApp disables an app when it is available
 func (api *Provisioning) DisableApp(appid string) error {
 	return api.changeAppState(appid, http.MethodDelete)
 }
