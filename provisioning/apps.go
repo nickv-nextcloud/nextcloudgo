@@ -7,6 +7,11 @@ import (
 	"github.com/nextcloud/nextcloudgo/ocs"
 )
 
+var (
+	// ErrAppDoesNotExist when the app does not exist
+	ErrAppDoesNotExist = errors.New("App does not exist")
+)
+
 // GetApps returns the list of apps matching the given filter
 // Valid values for filter are: enabled, disabled, all
 func (api *Provisioning) GetApps(filter string) ([]string, error) {
@@ -64,11 +69,13 @@ func (api *Provisioning) isAppInArray(appid, filter string) (bool, error) {
 }
 
 // EnableApp enables an app when it is available
+// Returns ErrAppDoesNotExist when the app does not exist
 func (api *Provisioning) EnableApp(appid string) error {
 	return api.changeAppState(appid, http.MethodPost)
 }
 
 // DisableApp disables an app when it is available
+// Returns ErrAppDoesNotExist when the app does not exist
 func (api *Provisioning) DisableApp(appid string) error {
 	return api.changeAppState(appid, http.MethodDelete)
 }
@@ -82,7 +89,7 @@ func (api *Provisioning) changeAppState(appid, method string) error {
 	}
 
 	if status == http.StatusNotFound {
-		return errors.New("App could not be found")
+		return ErrAppDoesNotExist
 	}
 
 	if status != http.StatusOK {
