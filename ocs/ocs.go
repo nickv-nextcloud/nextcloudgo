@@ -3,6 +3,7 @@ package ocs
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"io/ioutil"
 
 	"github.com/nextcloud/nextcloudgo"
@@ -19,16 +20,21 @@ func New(sdk nextcloudgo.NextcloudGo) Request {
 }
 
 // Request performs a (authenticated) request and returns the data
-func (ocs *Request) Request(method, url string, auth bool) (map[string]interface{}, error) {
-	response, err := ocs.sdk.Request(method, url, auth)
+func (ocs *Request) Request(method, url string, auth bool) (map[string]interface{}, int, error) {
+	return ocs.RequestWithBody(method, url, nil, auth)
+}
+
+// RequestWithBody performs a (authenticated) request and returns the data
+func (ocs *Request) RequestWithBody(method, url string, body io.Reader, auth bool) (map[string]interface{}, int, error) {
+	response, err := ocs.sdk.Request(method, url, body, auth)
 	if err != nil {
-		return nil, err
+		return nil, response.StatusCode, err
 	}
 
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return nil, response.StatusCode, err
 	}
 
 	var mixed interface{}
@@ -36,9 +42,9 @@ func (ocs *Request) Request(method, url string, auth bool) (map[string]interface
 
 	data, ok := mixed.(map[string]interface{})
 	if !ok {
-		return nil, errors.New("Invalid JSON response")
+		return nil, response.StatusCode, errors.New("Invalid JSON response")
 	}
-	return data, nil
+	return data, response.StatusCode, nil
 }
 
 // ValidateStatusCode checks whether the OCS status code matches the accepted value

@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"io"
 
 	//"fmt"
 	"io/ioutil"
@@ -72,7 +73,7 @@ func (sdk *NextcloudGo) Capabilities() interface{} {
 		return capabilities
 	}
 
-	response, err := sdk.Request(http.MethodGet, "ocs/v1.php/cloud/capabilities?format=json", true)
+	response, err := sdk.Request(http.MethodGet, "ocs/v1.php/cloud/capabilities?format=json", nil, true)
 	if err != nil {
 		log.Fatal(err)
 		return capabilities
@@ -95,7 +96,7 @@ func (sdk *NextcloudGo) Status() map[string]string {
 		return status
 	}
 
-	response, err := sdk.Request(http.MethodGet, "status.php", false)
+	response, err := sdk.Request(http.MethodGet, "status.php", nil, false)
 	if err != nil {
 		log.Fatal(err)
 		return status
@@ -112,8 +113,9 @@ func (sdk *NextcloudGo) Status() map[string]string {
 	}
 }
 
-func (sdk *NextcloudGo) Request(method, url string, auth bool) (*http.Response, error) {
-	req, err := http.NewRequest(method, sdk.serverUrl+url, nil)
+func (sdk *NextcloudGo) Request(method, url string, body io.Reader, auth bool) (*http.Response, error) {
+	req, err := http.NewRequest(method, sdk.serverUrl+url, body)
+
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +127,7 @@ func (sdk *NextcloudGo) Request(method, url string, auth bool) (*http.Response, 
 		req.SetBasicAuth(sdk.user, sdk.password)
 	}
 	req.Header.Add("OCS-APIRequest", "true")
+	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 
 	client := &http.Client{}
 	if sdk.certPath != "" {

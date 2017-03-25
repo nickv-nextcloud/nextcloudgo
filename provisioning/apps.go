@@ -21,21 +21,16 @@ func (api *Provisioning) GetApps(filter string) ([]string, error) {
 		url = endpoint + "/apps?format=json"
 	}
 
-	content, err := api.ocs.Request(http.MethodGet, url, true)
+	content, status, err := api.ocs.Request(http.MethodGet, url, true)
 	if err != nil {
 		return []string{}, err
 	}
 
-	if !ocs.ValidateStatusCode(content, 200) {
-		return []string{}, errors.New("Status code was invalid")
+	if status != http.StatusOK {
+		return []string{}, errors.New("An error occured while search for apps")
 	}
 
-	apps, err := ocs.GetStringList(content, []string{"ocs", "data", "apps"})
-	if err != nil {
-		return []string{}, err
-	}
-
-	return apps, nil
+	return ocs.GetStringList(content, []string{"ocs", "data", "apps"})
 }
 
 // IsAppEnabled returns true when the app is enabled, false otherwise
@@ -81,12 +76,16 @@ func (api *Provisioning) DisableApp(appid string) error {
 func (api *Provisioning) changeAppState(appid, method string) error {
 	url := endpoint + "/apps/" + appid + "?format=json"
 
-	content, err := api.ocs.Request(method, url, true)
+	_, status, err := api.ocs.Request(method, url, true)
 	if err != nil {
 		return err
 	}
 
-	if !ocs.ValidateStatusCode(content, 200) {
+	if status == http.StatusNotFound {
+		return errors.New("App could not be found")
+	}
+
+	if status != http.StatusOK {
 		if method == http.MethodPost {
 			return errors.New("An error occured while enabling the app")
 		}

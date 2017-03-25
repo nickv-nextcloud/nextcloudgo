@@ -71,7 +71,7 @@ func New(sdk nextcloudgo.NextcloudGo) Sharing {
 func (sharing *Sharing) GetShareById(id int) (Share, error) {
 	url := endpoint + "/shares/" + strconv.Itoa(id)
 
-	content, err := sharing.ocs.Request(http.MethodGet, url+"?format=json", true)
+	content, _, err := sharing.ocs.Request(http.MethodGet, url+"?format=json", true)
 	if err != nil {
 		return Share{}, err
 	}

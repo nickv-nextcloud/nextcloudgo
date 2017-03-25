@@ -1,4 +1,5 @@
-// Package provisioning allows to manage apps, users and groups on a nextcloud instance
+// Package provisioning allows to manage apps, users and groups on a nextcloud instance.
+// Unless specified otherwise the functions can only be used with an admin user.
 package provisioning
 
 import (
