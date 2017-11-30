@@ -8,17 +8,17 @@ import (
 )
 
 var (
-	endpoint = "ocs/v2.php/cloud"
+	endpoint = "/ocs/v2.php/cloud"
 )
 
 // Provisioning allows to manage apps, users and groups on a nextcloud instance
 type Provisioning struct {
-	sdk nextcloudgo.NextcloudGo
+	nc  nextcloudgo.NextcloudGo
 	ocs ocs.Request
 }
 
-// New returns a new Provisioning instance when given the sdk
-func New(sdk nextcloudgo.NextcloudGo) Provisioning {
-	ocs := ocs.New(sdk)
-	return Provisioning{sdk: sdk, ocs: ocs}
+// New returns a new Provisioning instance when given the NextcloudGo
+func New(nc nextcloudgo.NextcloudGo) Provisioning {
+	ocs := ocs.New(nc)
+	return Provisioning{nc: nc, ocs: ocs}
 }

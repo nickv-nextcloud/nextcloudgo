@@ -19,11 +19,9 @@ func (api *Provisioning) GetApps(filter string) ([]string, error) {
 		return []string{}, errors.New("Invalid filter given")
 	}
 
-	var url string
+	url := endpoint + "/apps"
 	if filter == "enabled" || filter == "disabled" {
-		url = endpoint + "/apps?filter=" + filter + "&format=json"
-	} else {
-		url = endpoint + "/apps?format=json"
+		url = url + "?filter=" + filter
 	}
 
 	content, status, err := api.ocs.Request(http.MethodGet, url, true)
@@ -81,7 +79,7 @@ func (api *Provisioning) DisableApp(appid string) error {
 }
 
 func (api *Provisioning) changeAppState(appid, method string) error {
-	url := endpoint + "/apps/" + appid + "?format=json"
+	url := endpoint + "/apps/" + appid
 
 	_, status, err := api.ocs.Request(method, url, true)
 	if err != nil {
