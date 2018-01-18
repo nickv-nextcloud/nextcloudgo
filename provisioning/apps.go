@@ -26,11 +26,11 @@ func (api *Provisioning) GetApps(filter string) ([]string, error) {
 
 	content, status, err := api.ocs.Request(http.MethodGet, url, true)
 	if err != nil {
-		return []string{}, err
+		return []string{}, errors.New("An error occured while searching for apps")
 	}
 
 	if status != http.StatusOK {
-		return []string{}, errors.New("An error occured while search for apps")
+		return []string{}, errors.New("An error occured while searching for apps")
 	}
 
 	return ocs.GetStringList(content, []string{"ocs", "data", "apps"})
